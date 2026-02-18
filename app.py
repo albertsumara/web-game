@@ -11,8 +11,12 @@ app = Flask(__name__)
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 game = Game()
-game_service = GameService(Game())
+game_service = GameService(game)
 register_lobby_socket(socketio, game_service)
+
+@app.route("/lobby")
+def lobby_page():
+    return render_template("lobby.html")
 
 @app.route("/")
 def index():

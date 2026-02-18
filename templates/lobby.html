@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Lobby</title>
+</head>
+<body>
+    <h2>Lobby</h2>
+    <div id="status">Łączenie...</div>
+    <ul id="playersList"></ul>
+
+    <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='lobby.js') }}"></script>
+</body>
+</html>

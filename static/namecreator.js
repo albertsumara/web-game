@@ -24,10 +24,11 @@ joinButton.addEventListener("click", () => {
     
     console.log("Socket connected?", socket.connected);
 
-    socket.emit("join", {
-        name: nickname
-    });
+    // socket.emit("join", {
+    //     name: nickname
+    // });
 
-    // input.disabled = true;
-    // joinButton.disabled = true;
+    sessionStorage.setItem("nickname", nickname);
+    window.location.href = "/lobby";
+
 });
