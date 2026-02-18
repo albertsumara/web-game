@@ -13,25 +13,28 @@ class GameService:
     def create_lobby(self, player):
         lobby_id = len(self.game.lobbies)
         lobby = Lobby(lobby_id)
+
         player.symbol = 'circle'
         lobby.add_player(player)
+
         self.game.lobbies[lobby_id] = lobby
         return lobby
 
     def append_to_exists_lobby(self, player):
         last_lobby = self.get_last_lobby()
+
         if last_lobby is None or self.check_lobby_full():
-            self.create_lobby(player)
+            return self.create_lobby(player)
         else:
             player.symbol = 'cross'
             last_lobby.add_player(player)
+            return last_lobby
 
     def check_lobby_full(self):
         last_lobby = self.get_last_lobby()
         if last_lobby is None:
             return False
         return len(last_lobby.players) >= 2
-
 
     def get_last_lobby(self):
         if not self.game.lobbies:
@@ -41,18 +44,5 @@ class GameService:
 
     def join_lobby(self, player_name):
         player = self.create_player(player_name)
-        
-
-        lobby_id = self.get_lobby_id_to_join()
-        lobby = self.get_lobby_by_id(lobby_id)
-        
-        lobby.add_player(player)
+        lobby = self.append_to_exists_lobby(player)
         return player, lobby
-
-    def get_lobby_id_to_join(self):
-        last_lobby = self.get_last_lobby()
-        if last_lobby is None:
-            return 0
-        if len(last_lobby.players) >= 2:
-            return last_lobby.lobby_id + 1
-        return len(last_lobby.lobby_id)

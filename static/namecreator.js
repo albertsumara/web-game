@@ -25,7 +25,6 @@ joinButton.addEventListener("click", () => {
     console.log("Socket connected?", socket.connected);
 
     socket.emit("join", {
-        lobby_id: "0",
         name: nickname
     });
 
