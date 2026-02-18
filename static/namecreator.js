@@ -11,11 +11,18 @@ joinButton.textContent = "dołącz";
 lobbyDiv.appendChild(input);
 lobbyDiv.appendChild(joinButton);
 
-const socket = io("http://localhost:5000");
+
+const socket = io();
+
+socket.onAny((event, data) => {
+    console.log("Received event:", event, data);
+});
 
 joinButton.addEventListener("click", () => {
     const nickname = input.value.trim();
     if (!nickname) return alert("Wpisz nick!");
+    
+    console.log("Socket connected?", socket.connected);
 
     socket.emit("join", {
         lobby_id: "0",

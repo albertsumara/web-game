@@ -8,7 +8,7 @@ import json
 
 app = Flask(__name__)
 
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 game = Game()
 game_service = GameService(Game())

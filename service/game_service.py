@@ -38,3 +38,21 @@ class GameService:
             return None
         last_key = max(self.game.lobbies.keys())
         return self.game.lobbies[last_key]
+
+    def join_lobby(self, player_name):
+        player = self.create_player(player_name)
+        
+
+        lobby_id = self.get_lobby_id_to_join()
+        lobby = self.get_lobby_by_id(lobby_id)
+        
+        lobby.add_player(player)
+        return player, lobby
+
+    def get_lobby_id_to_join(self):
+        last_lobby = self.get_last_lobby()
+        if last_lobby is None:
+            return 0
+        if len(last_lobby.players) >= 2:
+            return last_lobby.lobby_id + 1
+        return len(last_lobby.lobby_id)
