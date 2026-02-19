@@ -1,6 +1,7 @@
 from model.lobby import Lobby
 from model.player import Player
 from model.game import Game
+import uuid
 
 class GameService:
 
@@ -10,8 +11,24 @@ class GameService:
     def create_player(self, name):
         return Player(name)
 
+    def join_lobby(self, player_name):
+            player = self.create_player(player_name) #tworzenie playera
+            lobby = self.append_to_exists_lobby(player) #dołączamy/próbujemy dołączyć do istniejącego lobby
+            return player, lobby
+
+    def append_to_exists_lobby(self, player):
+            last_lobby = self.get_last_lobby() #pobieramy ostatnie lobby
+
+            if last_lobby is None or self.check_lobby_full(): #jeśli jest pełne bądź nie istnieje (pierwsze lobby) tworzymy je
+                return self.create_lobby(player)
+            else:
+                player.symbol = 'cross'
+                last_lobby.add_player(player)
+                return last_lobby
+
     def create_lobby(self, player):
-        lobby_id = len(self.game.lobbies)
+        lobby_id = str(uuid.uuid4())
+        player.lobby_id = lobby_id
         lobby = Lobby(lobby_id)
 
         player.symbol = 'circle'
@@ -20,15 +37,7 @@ class GameService:
         self.game.lobbies[lobby_id] = lobby
         return lobby
 
-    def append_to_exists_lobby(self, player):
-        last_lobby = self.get_last_lobby()
-
-        if last_lobby is None or self.check_lobby_full():
-            return self.create_lobby(player)
-        else:
-            player.symbol = 'cross'
-            last_lobby.add_player(player)
-            return last_lobby
+    
 
     def check_lobby_full(self):
         last_lobby = self.get_last_lobby()
@@ -42,7 +51,4 @@ class GameService:
         last_key = max(self.game.lobbies.keys())
         return self.game.lobbies[last_key]
 
-    def join_lobby(self, player_name):
-        player = self.create_player(player_name)
-        lobby = self.append_to_exists_lobby(player)
-        return player, lobby
+    

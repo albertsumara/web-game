@@ -18,8 +18,11 @@ def register_lobby_socket(socketio, game_service):
 
         emit(
             "lobby_update",
-            {"players": [{"name": p.name, "symbol": p.symbol} for p in lobby.players.values()]},
+            {"players": [{"id": p.player_id,"name": p.name, "symbol": p.symbol, "status": p.status} for p in lobby.players.values()]},
             room=str(lobby.lobby_id)
         )
 
         print("Wysłano lobby_update do pokoju:", lobby.lobby_id, flush=True)
+
+        return {"room": str(lobby.lobby_id)}
+

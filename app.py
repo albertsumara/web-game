@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO
 from model.game import Game
 from service.game_service import GameService
@@ -21,6 +21,21 @@ def lobby_page():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route('/player/<player_id>', methods=['POST'])
+def set_player_ready(player_id):
+
+    for lobby in game.lobbies.values():
+        for p in lobby.players.values():
+            if p.player_id == player_id:
+
+                p.status = (
+                    'ready' if p.status == 'waiting' else 'waiting'
+                )
+
+                return jsonify(p.to_dict()), 200
+
+    return jsonify({"error": "Player not found"}), 404
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
