@@ -5,18 +5,18 @@ if (!nickname) {
     window.location.href = "/";
 }
 
-
 const socket = io();
-
 
 const playersList = document.getElementById("playersList");
 const statusDiv = document.getElementById("status");
 const table = document.createElement("table");
 
+// Tworzenie nagłówka tabeli
 const thead = document.createElement("thead");
 const headerRow = document.createElement("tr");
+const headers = ["Nickname", "Symbol", "Status"];
+// const headers = ["Nickname", "Symbol", "Status", "Change Status"];
 
-const headers = ["Nickname", "Symbol", "Status", "Change Status"];
 
 headers.forEach(text => {
     const th = document.createElement("th");
@@ -26,27 +26,28 @@ headers.forEach(text => {
 
 thead.appendChild(headerRow);
 table.appendChild(thead);
+playersList.appendChild(table);
+
+let lobbyId = null;
 
 socket.on("connect", () => {
     console.log("Połączono z serwerem SocketIO");
-    socket.emit("join", { name: nickname });
-    statusDiv.textContent = "Połączono z serwerem, czekamy na innych graczy...";
+
+    socket.emit("join", { name: nickname }, (response) => {
+        lobbyId = response.room;
+        console.log("Dołączono do lobby:", lobbyId);
+        statusDiv.textContent = "Połączono z serwerem, czekamy na innych graczy...";
+    });
 });
 
 socket.on("lobby_update", (data) => {
-    // console.log("Otrzymano lobby_update:", data);
-
-
-    playersList.innerHTML = "";
+    table.innerHTML = "";
+    table.appendChild(thead);
 
     const tbody = document.createElement("tbody");
 
     data.players.forEach(player => {
-
-        console.log("player:", player);
-
         const row = document.createElement("tr");
-
 
         const tdName = document.createElement("td");
         tdName.textContent = player.name;
@@ -56,15 +57,12 @@ socket.on("lobby_update", (data) => {
         tdSymbol.textContent = player.symbol;
         row.appendChild(tdSymbol);
 
-
         const tdStatus = document.createElement("td");
         tdStatus.textContent = player.status;
         tdStatus.id = `player-${player.id}-status`;
         row.appendChild(tdStatus);
 
-
         const tdChange = document.createElement("td");
-
         const btn = document.createElement("button");
         btn.textContent = "Change";
 
@@ -77,27 +75,30 @@ socket.on("lobby_update", (data) => {
     });
 
     table.appendChild(tbody);
-
-    playersList.appendChild(table);
-
-    // if (data.players.length < 2) {
-    //     statusDiv.textContent = "Czekamy na kolejnego gracza...";
-    // } else {
-    //     statusDiv.textContent = "Lobby pełne! Gotowi do startu gry.";
-    // }
 });
-
 
 socket.onAny((event, data) => {
     console.log("Received event:", event, data);
 });
 
+function setReady(playerId) {
+    if (!lobbyId) {
+        console.error("Nieznane lobby_id!");
+        return;
+    }
 
-function setReady(playerId, lobbyId) {
-    fetch(`/player/${playerId}`, { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-          console.log("Updated player:", data);
-          document.getElementById(`player-${data.id}-status`).innerText = data.status;
-      });
+    socket.emit("change_status", {
+        player_id: playerId,
+        // lobby_id: lobbyId
+    });
 }
+
+
+socket.on("disconnect", () => {
+    console.log("Rozłączono z serwerem, czyszczenie nicku...");
+    sessionStorage.removeItem("nickname");
+});
+
+window.addEventListener("beforeunload", () => {
+    sessionStorage.removeItem("nickname");
+});

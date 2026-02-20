@@ -9,4 +9,4 @@ class Player:
         self.symbol = 'nothing'
 
     def to_dict(self):
-        return {"id": self.player_id, "name": self.name,"symbol": self.symbol, "status": self.status}
+        return {"id": self.player_id, "name": self.name,"symbol": self.symbol, "status": self.status, "lobby_id": self.lobby_id}

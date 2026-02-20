@@ -52,3 +52,25 @@ class GameService:
         return self.game.lobbies[last_key]
 
     
+    def toggle_player_status(self, player_id: str):
+        for lobby in self.game.lobbies.values():
+            player = lobby.players.get(player_id)
+            if player:
+                player.status = "ready" if player.status == "waiting" else "waiting"
+                
+                return {
+                    "success": True,
+                    "lobby": {
+                        "players": [p.to_dict() for p in lobby.players.values()]
+                    },
+                    "lobby_id": lobby.lobby_id
+                }
+        return {"success": False, "error": "Player not found"}
+
+
+    def remove_player(self, player_id):
+        for lobby in self.game.lobbies.values():
+            if player_id in lobby.players:
+                lobby.players.pop(player_id)
+                return lobby.lobby_id
+        return None

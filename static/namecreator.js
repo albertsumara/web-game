@@ -32,3 +32,4 @@ joinButton.addEventListener("click", () => {
     window.location.href = "/lobby";
 
 });
+
