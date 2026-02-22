@@ -22,8 +22,8 @@ def register_lobby_socket(socketio, game_service):
 
         emit(
             "lobby_update",
-            {"players": [{"id": p.player_id, "name": p.name, "symbol": p.symbol, "status": p.status} 
-                         for p in lobby.players.values()]},
+            {"players": [{"name": p.name, "symbol": p.symbol, "status": p.status} 
+                         for p in lobby.players]},
             room=str(lobby.lobby_id)
         )
 
@@ -33,17 +33,25 @@ def register_lobby_socket(socketio, game_service):
 
     @socketio.on("change_status")
     def handle_toggle_ready(data):
-        result = game_service.toggle_player_status(player_id=data["player_id"])
+        print(f"testtt: {data}", flush=True)
+        result = game_service.toggle_player_status(socket_to_player.get(request.sid))
 
         if not result["success"]:
             emit("error", {"message": result["error"]})
             return
+
 
         socketio.emit(
             "lobby_update",
             result["lobby"],
             room=result["lobby_id"]
         )
+
+        player_status = [p["status"] for p in result["lobby"]["players"]]
+
+        if len(player_status) > 1 and all(status == "ready" for status in player_status):
+            socketio.emit("start_game", room=result["lobby_id"])
+            # print(f"Wszystkie gotowe w lobby {result['lobby_id']} - można rozpocząć grę!", flush=True)
 
     @socketio.on("disconnect")
     def handle_disconnect(sid):
@@ -64,7 +72,7 @@ def register_lobby_socket(socketio, game_service):
             # wysyłamy aktualizację do pozostałych graczy w lobby
             socketio.emit(
                 "lobby_update",
-                {"players": [p.to_dict() for p in game_service.game.lobbies[lobby_id].players.values()]},
+                {"players": [p.to_dict() for p in game_service.game.lobbies[lobby_id].players]},
                 room=lobby_id
             )
             print(f"[DISCONNECT] Wysłano lobby_update do lobby {lobby_id}", flush=True)

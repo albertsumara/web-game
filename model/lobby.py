@@ -1,12 +1,10 @@
 class Lobby:
     def __init__(self, lobby_id):
         self.lobby_id = lobby_id
-        self.players = {}
-
-
+        self.players = []
 
     def add_player(self, player):
-        self.players[player.player_id] = player
+        self.players.append(player)
 
     def get_player_count(self):
         return len(self.players)

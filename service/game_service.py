@@ -22,7 +22,10 @@ class GameService:
             if last_lobby is None or self.check_lobby_full(): #jeśli jest pełne bądź nie istnieje (pierwsze lobby) tworzymy je
                 return self.create_lobby(player)
             else:
-                player.symbol = 'cross'
+                if len(last_lobby.players) > 0 and last_lobby.players[0].symbol == 'cross':
+                    player.symbol = 'circle'
+                else:
+                    player.symbol = 'cross'
                 last_lobby.add_player(player)
                 return last_lobby
 
@@ -54,14 +57,14 @@ class GameService:
     
     def toggle_player_status(self, player_id: str):
         for lobby in self.game.lobbies.values():
-            player = lobby.players.get(player_id)
+            player = next((p for p in lobby.players if p.player_id == player_id), None)
             if player:
                 player.status = "ready" if player.status == "waiting" else "waiting"
                 
                 return {
                     "success": True,
                     "lobby": {
-                        "players": [p.to_dict() for p in lobby.players.values()]
+                        "players": [p.to_dict() for p in lobby.players]
                     },
                     "lobby_id": lobby.lobby_id
                 }
@@ -70,7 +73,8 @@ class GameService:
 
     def remove_player(self, player_id):
         for lobby in self.game.lobbies.values():
-            if player_id in lobby.players:
-                lobby.players.pop(player_id)
+            player = next((p for p in lobby.players if p.player_id == player_id), None)
+            if player:
+                lobby.players.remove(player)
                 return lobby.lobby_id
         return None

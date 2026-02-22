@@ -6,7 +6,7 @@ input.placeholder = "Wpisz nick";
 input.id = "nicknameInput";
 
 const joinButton = document.createElement("button");
-joinButton.textContent = "dołącz";
+joinButton.textContent = "Join";
 
 lobbyDiv.appendChild(input);
 lobbyDiv.appendChild(joinButton);

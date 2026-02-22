@@ -26,7 +26,7 @@ def index():
 def set_player_ready(player_id):
 
     for lobby in game.lobbies.values():
-        for p in lobby.players.values():
+        for p in lobby.players:
             if p.player_id == player_id:
 
                 p.status = (
