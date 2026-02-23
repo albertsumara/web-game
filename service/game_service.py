@@ -44,6 +44,7 @@ class GameService:
 
     def check_lobby_full(self):
         last_lobby = self.get_last_lobby()
+        self.clean_board(last_lobby.lobby_id)
         if last_lobby is None:
             return False
         return len(last_lobby.players) >= 2
@@ -78,3 +79,46 @@ class GameService:
                 lobby.players.remove(player)
                 return lobby.lobby_id
         return None
+    
+    def handle_click_cell(self, player_id, cell_id):
+        lobby = next(
+            (lobby for lobby in self.game.lobbies.values()
+            if any(p.player_id == player_id for p in lobby.players)),
+            None
+        )
+
+        if not lobby:
+            return {"success": False, "error": "Lobby not found"}
+
+
+        player = next(p for p in lobby.players if p.player_id == player_id)
+
+
+        if lobby.board[cell_id] is not None:
+            return {"success": False, "error": "Pole zajęte"}
+
+
+        lobby.board[cell_id] = player.symbol
+
+        print(f"board: {lobby.board}", flush=True)
+
+        return {
+            "success": True,
+            "game_state": lobby.board,
+            "lobby_id": lobby.lobby_id
+        }
+    
+    def clean_board(self, lobby_id):
+        lobby = self.game.lobbies.get(lobby_id)
+        if lobby:
+            lobby.board = {
+            "cell1": None,
+            "cell2": None,
+            "cell3": None,
+            "cell4": None,
+            "cell5": None,
+            "cell6": None,
+            "cell7": None,
+            "cell8": None,
+            "cell9": None
+        }

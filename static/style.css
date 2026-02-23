@@ -192,15 +192,50 @@ button {
 }
 
 /* Plansza gry – Diablo style */
-#gameBoard {
-    width: 600px;
-    height: 600px;
+#gameDiv {
+    position: relative;
+    width: 65vw;
+    aspect-ratio: 3 / 2; /* wysokość dopasuje się automatycznie */
     background-image: url("/static/images/board.png");
     background-size: contain; 
     background-position: center;
     background-repeat: no-repeat;
-    margin: 20px auto;
     border-radius: 12px;
     box-shadow: 0 0 20px #ff4500, 0 5px 25px rgba(255, 140, 0, 0.5);
     border: 2px solid #660000;
 }
+
+/* Wspólne style wszystkich komórek */
+.cell {
+    position: absolute;
+    transition: opacity 0.2s; /* płynne pojawianie */
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 3px solid red;    /* jeśli chcesz ramkę dla pustych pól */
+}
+
+.cell.empty {
+    opacity: 0;
+}
+
+.cell.empty:hover {
+    opacity: 1;
+}
+
+.cell.circle, .cell.cross {
+    opacity: 1;
+}
+
+/* Indywidualne pozycjonowanie i rozmiar komórek */
+#cell1 { top: 16%; left: 25%; width: 15%; height: 16%; }
+#cell2 { top: 16%; left: 42%; width: 16%; height: 16%; }
+#cell3 { top: 16%; left: 60%; width: 15%; height: 16%; }
+
+#cell4 { top: 34%; left: 25%; width: 15%; height: 19%; }
+#cell5 { top: 34%; left: 42%; width: 16%; height: 19%; }
+#cell6 { top: 34%; left: 60%; width: 15%; height: 19%; }
+
+#cell7 { top: 56%; left: 24%; width: 15%; height: 20%; }
+#cell8 { top: 56%; left: 41%; width: 17%; height: 20%; }
+#cell9 { top: 56%; left: 59%; width: 16%; height: 20%; }

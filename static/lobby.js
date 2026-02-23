@@ -56,7 +56,7 @@ function showLobby(){
 
 
     if (!nickname) {
-        alert("Brak nicku!");
+        // alert("Brak nicku!");
         window.location.href = "/";
     }
 
@@ -64,6 +64,8 @@ function showLobby(){
     gameDiv = document.getElementById("gameDiv");
     gameDiv.innerHTML = "";
     lobbyDiv.innerHTML = "";
+    gameDiv.style.display = "none";
+    lobbyDiv.style.display = "block";
 
 
     const containerDiv = document.createElement("div");
@@ -115,57 +117,12 @@ function showLobby(){
     playerSection.appendChild(playersList);
     playersList.appendChild(table);
 
-
-
-    // socket.on("lobby_update", (data) => {
-    //     table.innerHTML = "";
-    //     table.appendChild(thead);
-
-
-
-    //     const tbody = document.createElement("tbody");
-
-    //     data.players.forEach(player => {
-    //         const row = document.createElement("tr");
-
-    //         const tdName = document.createElement("td");
-    //         tdName.textContent = player.name;
-    //         row.appendChild(tdName);
-
-    //         const tdSymbol = document.createElement("td");
-    //         tdSymbol.textContent = player.symbol;
-    //         row.appendChild(tdSymbol);
-
-    //         const tdStatus = document.createElement("td");
-    //         tdStatus.textContent = player.status;
-    //         tdStatus.id = `player-${player.id}-status`;
-    //         row.appendChild(tdStatus);
-
-    //         // const tdChange = document.createElement("td");
-    //         // const btn = document.createElement("button");
-    //         // btn.textContent = "Change";
-
-    //         // btn.onclick = () => setReady(player.id);
-
-    //         // tdChange.appendChild(btn);
-    //         // row.appendChild(tdChange);
-
-    //         tbody.appendChild(row);
-    //     });
-
-    //     table.appendChild(tbody);
-    // });
-
     const btn = document.createElement("button");
     btn.textContent = "Change status";
 
     btn.onclick = () => setReady();
 
     playersList.appendChild(btn);
-
-    // lobbyDiv.appendChild(playersList);
-
-
 
 }
 
@@ -203,19 +160,45 @@ socket.on("lobby_update", (data) => {
 
 
 function startGame() {
-    lobbyDiv.innerHTML = "";
+    lobbyDiv.style.display = "none";
+    gameDiv.style.display = "block";
     gameDiv.innerHTML = "";
-    gameDiv = document.createElement("div");
-    gameDiv.id = "gameDiv";
 
-    const boardImg = document.createElement("img");
-    boardImg.src = "/static/images/board.png";
-    boardImg.alt = "Plansza gry";
-    boardImg.className = "boardImage";
+    for (let i = 1; i <= 9; i++) {
+        const cell = document.createElement("div");
+        cell.id = `cell${i}`;      // cell1, cell2 ... cell9
+        // cell.className = "cell.empty";   // wspólna klasa dla stylów
+        cell.classList.add("cell", "empty");
+        gameDiv.appendChild(cell);
+    }
 
+    const cells = document.querySelectorAll(".cell");
 
-    gameDiv.appendChild(boardImg);
-
-    lobbyDiv.appendChild(gameDiv);
+    cells.forEach(cell => {
+        cell.addEventListener("click", () => {
+            console.log("Kliknięto komórkę:", cell.id); // pokazuje ID klikniętej komórki
+            socket.emit("click_cell", { cell_id: cell.id });
+        });
+    });
 }
 
+
+socket.on("game_update", (board) => {
+    Object.entries(board).forEach(([cellId, symbol]) => {
+        const cell = document.getElementById(cellId);
+        if (!cell) return;
+
+        cell.classList.remove("cross", "circle", "empty");
+
+        if (!symbol) {
+            cell.classList.add("empty");
+            cell.style.backgroundImage = ""; 
+        } else {
+            cell.classList.remove("empty");
+            cell.classList.add(symbol);
+            cell.style.backgroundImage = `url('/static/images/${symbol.toLowerCase()}.png')`;
+            cell.style.opacity = 1;
+            cell.style.border = "none";
+        }
+    });
+});

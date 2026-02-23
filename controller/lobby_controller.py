@@ -82,3 +82,36 @@ def register_lobby_socket(socketio, game_service):
 
         else:
             print(f"[DISCONNECT] Lobby dla gracza {player_id} nie znaleziono", flush=True)
+
+    @socketio.on("click_cell")
+    def handle_click_cell(data):
+        print(f"Otrzymano click_cell: {data}", flush=True)
+        result = game_service.handle_click_cell(socket_to_player.get(request.sid), data["cell_id"])
+
+        if not result["success"]:
+            emit("error", {"message": result["error"]})
+            return
+
+        socketio.emit(
+            "game_update",
+            result["game_state"],
+            room=result["lobby_id"]
+        )
+
+
+    @socketio.on("get_board")
+    def handle_get_board():
+        player = socket_to_player.get(request.sid)
+        if not player:
+            emit("error", {"message": "Nieznany gracz"})
+            return
+
+        lobby = next(
+            (l for l in game_service.game.lobbies.values()
+            if any(p.player_id == player.player_id for p in l.players)),
+            None
+        )
+        if not lobby:
+            emit("error", {"message": "Lobby nie znalezione"})
+            return
+        emit("game_update", lobby.board)
