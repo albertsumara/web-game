@@ -70,11 +70,15 @@ def register_lobby_socket(socketio, game_service):
         if lobby_id:
             print(f"[DISCONNECT] Gracz {player_id} usunięty z lobby {lobby_id}", flush=True)
             # wysyłamy aktualizację do pozostałych graczy w lobby
+            socketio.emit("show_lobby", room=lobby_id)
             socketio.emit(
                 "lobby_update",
                 {"players": [p.to_dict() for p in game_service.game.lobbies[lobby_id].players]},
                 room=lobby_id
             )
             print(f"[DISCONNECT] Wysłano lobby_update do lobby {lobby_id}", flush=True)
+
+            
+
         else:
             print(f"[DISCONNECT] Lobby dla gracza {player_id} nie znaleziono", flush=True)

@@ -1,60 +1,67 @@
+/* Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Body – mroczny, gotycki klimat */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Cinzel', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    color: #f0e6d2; /* lekki złoty tekst domyślny */
 }
 
+/* Kontener – utrzymuje centralny układ */
 .container {
     width: 100%;
     max-width: 600px;
 }
 
+/* Namecreator / Lobby – mroczne „kryształowe” okienka */
 .namecreator-wrapper,
 .lobby-wrapper {
-    /* display:flex;
-    flex-direction: column;
-    gap: 15px; */
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    background: #1b1b1b; /* ciemne tło */
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(255, 140, 0, 0.5); /* pomarańczowy glow */
     padding: 40px;
     text-align: center;
+    border: 2px solid #4d2f1f; /* subtelna ramka */
 }
 
+/* Tytuły – gotyckie, złote akcenty */
 .title {
-    color: #333;
+    color: #ffb84d;
     font-size: 2.5em;
     margin-bottom: 30px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 2px 2px 8px #990000; /* lekki ognisty cień */
 }
 
 .section-title {
-    color: #555;
+    color: #e6c27f;
     font-size: 1.3em;
     margin-bottom: 20px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #ff8000;
     padding-bottom: 10px;
 }
 
+/* Status box – ciemne z delikatnym podświetleniem */
 .status-box {
-    background: #f0f0f0;
+    background: #2a2a2a;
     padding: 15px;
-    border-radius: 5px;
+    border-radius: 6px;
     margin-bottom: 20px;
-    color: #666;
+    color: #d4af37;
     font-weight: 500;
+    box-shadow: inset 0 0 5px #ff8000;
 }
 
+/* Namecreator input – gotyckie pola tekstowe */
 #namecreator {
     display: flex;
     flex-direction: column;
@@ -66,44 +73,50 @@ body {
     width: 100%;
     padding: 12px 15px;
     font-size: 1em;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #4d2f1f;
     border-radius: 5px;
-    transition: border-color 0.3s;
+    background: #1c1c1c;
+    color: #f0e6d2;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 #namecreator input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+    border-color: #ff8000;
+    box-shadow: 0 0 10px #ff8000;
 }
 
+/* Przyciski – ogniste, lekko magiczne */
 button {
     width: 100%;
     min-height: 40px;
     padding: 12px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #990000 0%, #ff3300 100%);
+    color: #fff8dc;
     border: none;
     border-radius: 5px;
     font-size: 1em;
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    text-shadow: 1px 1px 3px #330000;
 }
 
 #namecreator button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 15px #ff8000, 0 5px 20px rgba(255, 69, 0, 0.6);
 }
 
 #namecreator button:active {
     transform: translateY(0);
+    box-shadow: 0 0 8px #ff3300, 0 2px 10px rgba(255, 69, 0, 0.5);
 }
 
+/* Players section – ciemna tabela z ognistymi akcentami */
 .players-section {
     margin-top: 30px;
     width: 100%;
-    box-sizing: border-box; /* uwzględnia padding */
+    box-sizing: border-box;
 }
 
 .players-list {
@@ -118,71 +131,76 @@ button {
 
 .players-list table {
     width: 100%;
-    table-layout: fixed; /* równe kolumny */
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.95em;
-    background: #fff;
+    background: #1b1b1b;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
 }
 
 .players-list th, 
 .players-list td {
     padding: 12px 10px;
     text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-    word-wrap: break-word; /* tekst się zawija w komórkach */
+    border-bottom: 1px solid #4d2f1f;
+    word-wrap: break-word;
+    color: #f0e6d2;
 }
 
 .players-list th {
-    background: #f5f5f5;
+    background: #2a2a2a;
     font-weight: 600;
-    color: #333;
+    color: #ffb84d;
 }
 
 .players-list td {
-    background: #fafafa;
-    color: #555;
+    background: #1e1e1e;
+    color: #d4af37;
 }
 
 .players-list tr:hover td {
-    background: #f0f0f0;
+    background: #330000;
 }
 
 .players-list button {
     padding: 6px 10px;
-    background: #667eea;
-    color: white;
+    background: #990000;
+    color: #fff8dc;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.85em;
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
 .players-list button:hover {
-    background: #764ba2;
+    background: #ff3300;
+    box-shadow: 0 0 8px #ff8000;
 }
 
+/* Statusy graczy */
 .status-ready {
-    color: #4caf50;
+    color: #00ff00;
     font-weight: 600;
 }
 
 .status-waiting {
-    color: #ff9800;
+    color: #ffcc00;
     font-weight: 600;
 }
 
+/* Plansza gry – Diablo style */
 #gameBoard {
-    width: 600px;          /* szerokość planszy */
-    height: 600px;         /* wysokość planszy (kwadratowa) */
+    width: 600px;
+    height: 600px;
     background-image: url("/static/images/board.png");
-    background-size: cover;   /* dopasowanie obrazu do całej planszy */
-    background-position: center; /* wycentrowanie obrazka */
+    background-size: contain; 
+    background-position: center;
     background-repeat: no-repeat;
-    margin: 20px auto;        /* wycentrowanie planszy w kontenerze */
-    border-radius: 10px;      /* opcjonalnie zaokrąglone rogi */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+    margin: 20px auto;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #ff4500, 0 5px 25px rgba(255, 140, 0, 0.5);
+    border: 2px solid #660000;
 }
