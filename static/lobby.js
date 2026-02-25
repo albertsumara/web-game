@@ -3,6 +3,7 @@ let lobbyId = null;
 let lobbyDiv = null;
 let gameDiv = null;
 const nickname = sessionStorage.getItem("nickname");
+let playerSymbol = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     showLobby();
@@ -169,6 +170,7 @@ function startGame() {
         cell.id = `cell${i}`;      // cell1, cell2 ... cell9
         // cell.className = "cell.empty";   // wspólna klasa dla stylów
         cell.classList.add("cell", "empty");
+        cell.style.backgroundImage = `url('/static/images/${playerSymbol.toLowerCase()}.png')`;
         gameDiv.appendChild(cell);
     }
 
@@ -182,8 +184,21 @@ function startGame() {
     });
 }
 
+socket.on("assign_symbol", (data) => {
+    playerSymbol = data.player_symbol;
+    console.log("Otrzymano symbol gracza:", playerSymbol);
+});
+
+socket.on("game_over", (data) => {
+    const winner = data.winner;
+    console.log("Otrzymano sygnał game_over, zwycięzca:", winner);
+    alert(`Game Over! Winner: ${winner}`);
+    showLobby();
+});
 
 socket.on("game_update", (board) => {
+
+
     Object.entries(board).forEach(([cellId, symbol]) => {
         const cell = document.getElementById(cellId);
         if (!cell) return;
@@ -192,7 +207,7 @@ socket.on("game_update", (board) => {
 
         if (!symbol) {
             cell.classList.add("empty");
-            cell.style.backgroundImage = ""; 
+            // cell.style.backgroundImage = `url('/static/images/${playerSymbol.toLowerCase()}.png')`;
         } else {
             cell.classList.remove("empty");
             cell.classList.add(symbol);

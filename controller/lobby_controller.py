@@ -14,11 +14,15 @@ def register_lobby_socket(socketio, game_service):
 
         socket_to_player[request.sid] = player.player_id
 
-        print(f"Gracz utworzony: {player.name} | id: {player.player_id}", flush=True)
-        print(f"Przypisano do lobby: {lobby.lobby_id}", flush=True)
+        # print(f"Gracz utworzony: {player.name} | id: {player.player_id}", flush=True)
+        # print(f"Przypisano do lobby: {lobby.lobby_id}", flush=True)
 
         join_room(str(lobby.lobby_id))
-        print(f"Dołączono do pokoju SocketIO: {lobby.lobby_id}", flush=True)
+        # print(f"Dołączono do pokoju SocketIO: {lobby.lobby_id}", flush=True)
+
+        # print(f"Przypisany symbol dla gracza {player.name}: {player.symbol}", flush=True)
+
+        emit("assign_symbol", {"player_symbol": player.symbol})
 
         emit(
             "lobby_update",
@@ -76,21 +80,33 @@ def register_lobby_socket(socketio, game_service):
                 {"players": [p.to_dict() for p in game_service.game.lobbies[lobby_id].players]},
                 room=lobby_id
             )
-            print(f"[DISCONNECT] Wysłano lobby_update do lobby {lobby_id}", flush=True)
+            # print(f"[DISCONNECT] Wysłano lobby_update do lobby {lobby_id}", flush=True)
 
             
 
-        else:
-            print(f"[DISCONNECT] Lobby dla gracza {player_id} nie znaleziono", flush=True)
+        # else:
+        #     # print(f"[DISCONNECT] Lobby dla gracza {player_id} nie znaleziono", flush=True)
 
     @socketio.on("click_cell")
     def handle_click_cell(data):
-        print(f"Otrzymano click_cell: {data}", flush=True)
+        # print(f"Otrzymano click_cell: {data}", flush=True)
         result = game_service.handle_click_cell(socket_to_player.get(request.sid), data["cell_id"])
 
         if not result["success"]:
             emit("error", {"message": result["error"]})
             return
+        player = game_service.get_player(socket_to_player.get(request.sid))
+        # print(f"sprawdzam zwyciezce...", flush=True)
+        # print(f"aktualny zwycięzca: {game_service.game.lobbies.get(player.lobby_id).state_of_game['who_wins']}", flush=True)
+        if game_service.game.lobbies.get(player.lobby_id).state_of_game["who_wins"] is not None:
+            # print(f"Gra zakończona, zwycięzca: {game_service.game.lobbies.get(player.lobby_id).state_of_game['who_wins']}", flush=True)
+            emit("game_over", {"winner": game_service.game.lobbies.get(player.lobby_id).state_of_game["who_wins"]}, room=player.lobby_id)
+            emit(
+            "lobby_update",
+            {"players": [{"name": p.name, "symbol": p.symbol, "status": p.status} 
+                         for p in game_service.game.lobbies.get(player.lobby_id).players]},
+            room=player.lobby_id
+            )
 
         socketio.emit(
             "game_update",
@@ -101,7 +117,7 @@ def register_lobby_socket(socketio, game_service):
 
     @socketio.on("get_board")
     def handle_get_board():
-        player = socket_to_player.get(request.sid)
+        player = game_service.get_player(socket_to_player.get(request.sid))
         if not player:
             emit("error", {"message": "Nieznany gracz"})
             return
@@ -114,4 +130,7 @@ def register_lobby_socket(socketio, game_service):
         if not lobby:
             emit("error", {"message": "Lobby nie znalezione"})
             return
+        
+
+
         emit("game_update", lobby.board)

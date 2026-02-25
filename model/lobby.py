@@ -1,3 +1,6 @@
+import random
+
+
 class Lobby:
     def __init__(self, lobby_id):
         self.lobby_id = lobby_id
@@ -13,9 +16,15 @@ class Lobby:
             "cell8": None,
             "cell9": None
         }
+        self.state_of_game = {"who_wins": None}
+
+        self.current_turn = self.players[0].player_id if self.players else None
 
     def add_player(self, player):
         self.players.append(player)
 
     def get_player_count(self):
         return len(self.players)
+    
+    def reset_turn(self):
+        self.current_turn = random.choice(self.players).player_id if self.players else None

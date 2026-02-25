@@ -212,7 +212,7 @@ button {
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    border: 3px solid red;    /* jeśli chcesz ramkę dla pustych pól */
+    /* border: 3px solid red; */
 }
 
 .cell.empty {
@@ -220,7 +220,7 @@ button {
 }
 
 .cell.empty:hover {
-    opacity: 1;
+    opacity: 0.55;
 }
 
 .cell.circle, .cell.cross {

@@ -1,3 +1,4 @@
+import random
 from model.lobby import Lobby
 from model.player import Player
 from model.game import Game
@@ -27,6 +28,9 @@ class GameService:
                 else:
                     player.symbol = 'cross'
                 last_lobby.add_player(player)
+                player.lobby_id = last_lobby.lobby_id
+                random_player = random.choice(last_lobby.players)
+                last_lobby.current_turn = random_player.player_id
                 return last_lobby
 
     def create_lobby(self, player):
@@ -38,6 +42,9 @@ class GameService:
         lobby.add_player(player)
 
         self.game.lobbies[lobby_id] = lobby
+
+        print(f"Created lobby {lobby_id} and added player {player.player_id}", flush=True)
+
         return lobby
 
     
@@ -80,6 +87,13 @@ class GameService:
                 return lobby.lobby_id
         return None
     
+    def get_player(self, player_id):
+        for lobby in self.game.lobbies.values():
+            player = next((p for p in lobby.players if p.player_id == player_id), None)
+            if player:
+                return player
+        return None
+
     def handle_click_cell(self, player_id, cell_id):
         lobby = next(
             (lobby for lobby in self.game.lobbies.values()
@@ -93,12 +107,39 @@ class GameService:
 
         player = next(p for p in lobby.players if p.player_id == player_id)
 
+        if lobby.current_turn != player_id:
+            return {"success": False, "error": "Not your turn"}
 
         if lobby.board[cell_id] is not None:
-            return {"success": False, "error": "Pole zajęte"}
+            return {"success": False, "error": "Cell already occupied"}
 
 
         lobby.board[cell_id] = player.symbol
+        lobby.current_turn = next(
+            (p.player_id for p in lobby.players if p.player_id != player_id),
+            None
+        )
+
+        win_combinations = [
+            ["cell1", "cell2", "cell3"],
+            ["cell4", "cell5", "cell6"],
+            ["cell7", "cell8", "cell9"],
+            ["cell1", "cell4", "cell7"],
+            ["cell2", "cell5", "cell8"],
+            ["cell3", "cell6", "cell9"],
+            ["cell1", "cell5", "cell9"],
+            ["cell3", "cell5", "cell7"]
+        ]
+
+        for combo in win_combinations:
+            if all(lobby.board[cell] == player.symbol for cell in combo):
+                lobby.board["winner"] = player.symbol
+                lobby = self.game.lobbies.get(player.lobby_id)
+                lobby.state_of_game["who_wins"] = player.symbol
+                lobby.reset_turn()
+                self.clean_board(lobby.lobby_id)
+                for p in lobby.players:
+                    p.status = "waiting"
 
         print(f"board: {lobby.board}", flush=True)
 
