@@ -1,12 +1,15 @@
 const socket = io();
 let lobbyId = null;
+let lobbyCreatorDiv = null;
+let lobbyChooserDiv = null;
 let lobbyDiv = null;
 let gameDiv = null;
 const nickname = sessionStorage.getItem("nickname");
 let playerSymbol = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-    showLobby();
+    showLobbyChooser();
+    
 });
 
 socket.on("connect", () => {
@@ -15,17 +18,15 @@ socket.on("connect", () => {
     socket.emit("join", { name: nickname }, (response) => {
         lobbyId = response.room;
         console.log("Dołączono do lobby:", lobbyId);
-        // statusDiv.textContent = "Połączono z serwerem, czekamy na innych graczy...";
+
     });
 });
 
 socket.on("start_game", () => {
-    console.log("Otrzymano sygnał start_game, rozpoczynamy grę...");
     startGame();
 });
 
 socket.on("show_lobby", () => {
-    console.log("Otrzymano sygnał show_lobby, pokazujemy lobby...");
     showLobby();
 });
 
@@ -35,17 +36,14 @@ socket.onAny((event, data) => {
 
 function setReady() {
     if (!lobbyId) {
-        console.error("Nieznane lobby_id!");
         return;
     }
-
     socket.emit("change_status", {
     });
 }
 
 
 socket.on("disconnect", () => {
-    console.log("Rozłączono z serwerem, czyszczenie nicku...");
     sessionStorage.removeItem("nickname");
 });
 
@@ -53,19 +51,176 @@ window.addEventListener("beforeunload", () => {
     sessionStorage.removeItem("nickname");
 });
 
-function showLobby(){
 
+function showLobbyChooser(lobbies = []) {
 
     if (!nickname) {
-        // alert("Brak nicku!");
         window.location.href = "/";
+        return;
     }
 
-    lobbyDiv = document.getElementById("lobbyDiv");
-    gameDiv = document.getElementById("gameDiv");
-    gameDiv.innerHTML = "";
-    lobbyDiv.innerHTML = "";
-    gameDiv.style.display = "none";
+    hideAllViews();
+
+    lobbyChooserDiv.style.display = "block";
+
+
+    const wrapperDiv = document.createElement("div");
+    wrapperDiv.className = "lobby-wrapper";
+    lobbyChooserDiv.appendChild(wrapperDiv);
+
+    const headerContainer = document.createElement("div");
+    headerContainer.id = "headerContainer";
+    headerContainer.style.display = "flex";
+    headerContainer.style.justifyContent = "space-between";
+    headerContainer.style.alignItems = "center";
+    wrapperDiv.appendChild(headerContainer);
+
+    const headerDiv = document.createElement("h1");
+    headerDiv.className = "title";
+    headerDiv.textContent = "Choose Lobby";
+    headerContainer.appendChild(headerDiv);
+
+    const topButton = document.createElement("button");
+    topButton.id = "topButton";
+    topButton.textContent = "Create Lobby";
+    topButton.onclick = () => lobbyCreator();
+    topButton.style.width = "auto";
+    topButton.style.fontSize = "0.9em";
+    headerContainer.appendChild(topButton);
+
+    const tableWrapper = document.createElement("div");
+    tableWrapper.style.maxHeight = "300px";
+    tableWrapper.style.overflowY = "auto";
+    tableWrapper.style.marginTop = "20px";
+    wrapperDiv.appendChild(tableWrapper);
+
+    const table = document.createElement("table");
+    table.id = "lobbyTable";
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+    tableWrapper.appendChild(table);
+
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    [".", "Lobby Name", "Players", "Action"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        th.style.padding = "10px";
+        th.style.borderBottom = "2px solid #4d2f1f";
+        th.style.color = "#ffb84d";
+        th.style.background = "#2a2a2a";
+        th.style.textAlign = "left";
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    lobbies.forEach(lobby => {
+        const row = document.createElement("tr");
+
+        const idCell = document.createElement("td");
+        idCell.textContent = lobby.id;
+        row.appendChild(idCell);
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = lobby.name;
+        row.appendChild(nameCell);
+
+        const playersCell = document.createElement("td");
+        playersCell.textContent = `${lobby.players}/2`;
+        row.appendChild(playersCell);
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = lobby.players < 2 ? "Waiting" : "Full";
+        row.appendChild(statusCell);
+
+        const actionCell = document.createElement("td");
+        const joinBtn = document.createElement("button");
+        joinBtn.textContent = "Join";
+        joinBtn.onclick = () => socket.emit("join_lobby", { lobby_id: lobby.id });
+        actionCell.appendChild(joinBtn);
+        row.appendChild(actionCell);
+
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    fetchLobbies();
+}
+
+function lobbyCreator() {
+    hideAllViews();
+    lobbyCreatorDiv.style.display = "block";
+    lobbyCreatorDiv.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "lobby-wrapper";
+    lobbyCreatorDiv.appendChild(wrapper);
+
+    const header = document.createElement("h1");
+    header.className = "title";
+    header.textContent = "Create Lobby";
+    wrapper.appendChild(header);
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Lobby Name";
+    nameInput.id = "lobbyNameInput";
+    nameInput.style.marginBottom = "15px";
+    wrapper.appendChild(nameInput);
+
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "password";
+    passwordInput.placeholder = "Password (optional)";
+    passwordInput.id = "lobbyPasswordInput";
+    passwordInput.style.marginBottom = "20px";
+    wrapper.appendChild(passwordInput);
+
+    const createBtn = document.createElement("button");
+    createBtn.textContent = "Create Lobby";
+    createBtn.onclick = () => {
+        const lobbyName = nameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!lobbyName) {
+            alert("Please enter a lobby name.");
+            return;
+        }
+
+        fetch("/create_lobby", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                lobby_name: lobbyName,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Lobby created:", data.lobby_id);
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Server error, try again.");
+        });
+    };
+    wrapper.appendChild(createBtn);
+
+    const backBtn = document.createElement("button");
+    backBtn.textContent = "Back";
+    backBtn.style.marginTop = "10px";
+    backBtn.onclick = () => showLobbyChooser();
+    wrapper.appendChild(backBtn);
+}
+
+function showLobby(){
+
+    hideAllViews();
     lobbyDiv.style.display = "block";
 
 
@@ -89,11 +244,6 @@ function showLobby(){
     playerHeader.textContent = "Players";
     playerSection.appendChild(playerHeader);
     lobbyWrapper.appendChild(playerSection);
-
-    // const ul = document.createElement("ul");
-    // ul.className = "players-list";
-    // ul.id = "playerList";
-    // playerSection.appendChild(ul);
 
     const playersList = document.createElement("div");
     playersList.id = "playersList";
@@ -145,7 +295,6 @@ socket.on("lobby_update", (data) => {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // Tworzymy tbody z graczami
     const tbody = document.createElement("tbody");
     data.players.forEach(player => {
         const row = document.createElement("tr");
@@ -161,14 +310,12 @@ socket.on("lobby_update", (data) => {
 
 
 function startGame() {
-    lobbyDiv.style.display = "none";
-    gameDiv.style.display = "block";
-    gameDiv.innerHTML = "";
+    hideAllViews();
+    lobbyDiv.style.display = "block";
 
     for (let i = 1; i <= 9; i++) {
         const cell = document.createElement("div");
-        cell.id = `cell${i}`;      // cell1, cell2 ... cell9
-        // cell.className = "cell.empty";   // wspólna klasa dla stylów
+        cell.id = `cell${i}`;
         cell.classList.add("cell", "empty");
         cell.style.backgroundImage = `url('/static/images/${playerSymbol.toLowerCase()}.png')`;
         gameDiv.appendChild(cell);
@@ -178,7 +325,7 @@ function startGame() {
 
     cells.forEach(cell => {
         cell.addEventListener("click", () => {
-            console.log("Kliknięto komórkę:", cell.id); // pokazuje ID klikniętej komórki
+            console.log("Kliknięto komórkę:", cell.id);
             socket.emit("click_cell", { cell_id: cell.id });
         });
     });
@@ -207,8 +354,7 @@ socket.on("game_update", (board) => {
 
         if (!symbol) {
             cell.classList.add("empty");
-            // cell.style.backgroundImage = `url('/static/images/${playerSymbol.toLowerCase()}.png')`;
-        } else {
+                } else {
             cell.classList.remove("empty");
             cell.classList.add(symbol);
             cell.style.backgroundImage = `url('/static/images/${symbol.toLowerCase()}.png')`;
@@ -217,3 +363,86 @@ socket.on("game_update", (board) => {
         }
     });
 });
+
+function hideAllViews() {
+    lobbyChooserDiv = document.getElementById("lobbyChooserDiv");
+    lobbyCreatorDiv = document.getElementById("lobbyCreatorDiv");
+    lobbyDiv = document.getElementById("lobbyDiv");
+    gameDiv = document.getElementById("gameDiv");
+
+    lobbyChooserDiv.innerHTML = "";
+    lobbyCreatorDiv.innerHTML = "";
+    lobbyDiv.innerHTML = "";
+    gameDiv.innerHTML = "";
+
+    if (lobbyChooserDiv) lobbyChooserDiv.style.display = "none";
+    if (lobbyCreatorDiv) lobbyCreatorDiv.style.display = "none";
+    if (lobbyDiv) lobbyDiv.style.display = "none";
+    if (gameDiv) gameDiv.style.display = "none";
+}
+
+function fetchLobbies() {
+    fetch("/get_lobbies")
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector("#lobbyTable tbody");
+            tbody.innerHTML = ""; // czyścimy poprzednie lobby
+
+
+            data.lobbies.forEach(lobby => {
+                const row = document.createElement("tr");
+
+
+                
+                const idCell = document.createElement("td");
+                idCell.textContent = data.lobbies.indexOf(lobby) + 1;
+                row.appendChild(idCell);
+
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = lobby.name;
+                row.appendChild(nameCell);
+
+
+                const playersCell = document.createElement("td");
+                playersCell.textContent = `${lobby.players}/${lobby.max_players || 2}`;
+                row.appendChild(playersCell);
+
+                // Join button
+                const joinCell = document.createElement("td");
+                const joinBtn = document.createElement("button");
+                joinBtn.textContent = "Join";
+                joinBtn.onclick = () => {
+                    if (lobby.has_password) {
+                        const pw = prompt("Enter lobby password:");
+                        // tutaj możesz zrobić POST z password
+                        joinLobby(lobby.id, pw);
+                    } else {
+                        joinLobby(lobby.id);
+                    }
+                };
+                joinCell.appendChild(joinBtn);
+                row.appendChild(joinCell);
+
+                tbody.appendChild(row);
+            });
+        })
+        .catch(err => console.error("Error fetching lobbies:", err));
+}
+
+function joinLobby(lobbyId, password = null) {
+    fetch("/join_lobby", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lobby_id: lobbyId, password: password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Joined lobby!");
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+}
+

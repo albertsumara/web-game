@@ -1,7 +1,7 @@
 from flask import request
 from flask_socketio import emit, join_room
 
-def register_lobby_socket(socketio, game_service):
+def register_lobby_socket(app, socketio, game_service):
 
     socket_to_player = {}
 
@@ -11,17 +11,8 @@ def register_lobby_socket(socketio, game_service):
 
         name = data["name"]
         player, lobby = game_service.join_lobby(name)
-
         socket_to_player[request.sid] = player.player_id
-
-        # print(f"Gracz utworzony: {player.name} | id: {player.player_id}", flush=True)
-        # print(f"Przypisano do lobby: {lobby.lobby_id}", flush=True)
-
         join_room(str(lobby.lobby_id))
-        # print(f"Dołączono do pokoju SocketIO: {lobby.lobby_id}", flush=True)
-
-        # print(f"Przypisany symbol dla gracza {player.name}: {player.symbol}", flush=True)
-
         emit("assign_symbol", {"player_symbol": player.symbol})
 
         emit(
@@ -30,10 +21,30 @@ def register_lobby_socket(socketio, game_service):
                          for p in lobby.players]},
             room=str(lobby.lobby_id)
         )
-
         print("Wysłano lobby_update do pokoju:", lobby.lobby_id, flush=True)
-
         return {"room": str(lobby.lobby_id)}
+
+    @app.route("/create_lobby", methods=["POST"])
+    def create_lobby_endpoint():
+        data = request.get_json()
+        lobby_name = data.get("lobby_name")
+        password = data.get("password")
+        lobby = game_service.create_lobby(lobby_name, password=password)
+        print(game_service.get_lobbies())
+        return {"success": True, "lobby_id": lobby.lobby_id}, 200
+
+    @app.route("/get_lobbies", methods=["GET"])
+    def get_lobbies():
+        lobbies = game_service.get_lobbies()  # zwraca słownik lobby_id -> Lobby
+        lobby_list = []
+
+        for lobby in lobbies:
+            lobby_list.append({
+                "id": lobby.lobby_id,
+                "name": lobby.name,
+                "players": len(lobby.players),
+            })
+        return {"success": True, "lobbies": lobby_list}, 200
 
     @socketio.on("change_status")
     def handle_toggle_ready(data):

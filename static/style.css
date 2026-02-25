@@ -29,7 +29,7 @@ body {
     background: #1b1b1b; /* ciemne tło */
     border-radius: 12px;
     box-shadow: 0 0 30px rgba(255, 140, 0, 0.5); /* pomarańczowy glow */
-    padding: 40px;
+    padding: 30px;
     text-align: center;
     border: 2px solid #4d2f1f; /* subtelna ramka */
 }
@@ -239,3 +239,193 @@ button {
 #cell7 { top: 56%; left: 24%; width: 15%; height: 20%; }
 #cell8 { top: 56%; left: 41%; width: 17%; height: 20%; }
 #cell9 { top: 56%; left: 59%; width: 16%; height: 20%; }
+
+/* LobbyChooser - lista lobby ze scroll */
+#lobbyChooserDiv {
+    display: none;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.lobby-wrapper .lobby-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;  
+    overflow-y: auto;      
+    padding-right: 5px;     
+}
+
+.lobby-wrapper .lobby-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lobby-wrapper .lobby-list::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+
+.lobby-wrapper .lobby-list button {
+    padding: 12px 15px;
+    background: #1e1e1e;
+    border: 2px solid #4d2f1f; 
+    border-radius: 8px;
+    color: #d4af37;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    box-shadow: 0 0 10px rgba(255, 69, 0, 0.2);
+}
+
+.lobby-wrapper .lobby-list button:hover {
+    background: #330000;
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(255, 140, 0, 0.5);
+}
+
+/* Przycisk w prawym górnym rogu nagłówka */
+.lobby-wrapper > div > button {
+    background: linear-gradient(135deg, #990000 0%, #ff3300 100%);
+    color: #fff8dc;
+    border-radius: 5px;
+    border: none;
+    padding: 8px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 0 8px #ff8000;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.lobby-wrapper > div > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px #ff8000, 0 5px 20px rgba(255, 69, 0, 0.6);
+}
+
+#lobbyCreatorDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#lobbyCreatorDiv .lobby-wrapper {
+    background: #1b1b1b;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(255, 140, 0, 0.5);
+    padding: 30px;
+    text-align: center;
+    border: 2px solid #4d2f1f;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    min-width: 600px;
+    margin: 0 auto;   
+}
+
+#lobbyCreatorDiv .lobby-wrapper input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1em;
+    border: 2px solid #4d2f1f;
+    border-radius: 5px;
+    background: #1c1c1c;
+    color: #f0e6d2;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#lobbyCreatorDiv .lobby-wrapper input:focus {
+    outline: none;
+    border-color: #ff8000;
+    box-shadow: 0 0 10px #ff8000;
+}
+
+#lobbyCreatorDiv .lobby-wrapper button {
+    width: 100%;
+    min-height: 40px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #990000 0%, #ff3300 100%);
+    color: #fff8dc;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-shadow: 1px 1px 3px #330000;
+}
+
+#lobbyCreatorDiv .lobby-wrapper button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px #ff8000, 0 5px 20px rgba(255, 69, 0, 0.6);
+}
+
+#lobbyCreatorDiv .lobby-wrapper button:active {
+    transform: translateY(0);
+    box-shadow: 0 0 8px #ff3300, 0 2px 10px rgba(255, 69, 0, 0.5);
+}
+
+#headerContainer {
+    position: relative;
+    width: 100%;
+    display: flex !important; 
+    justify-content: center !important;
+    align-items: center !important;
+    margin-bottom: 20px;
+}
+
+#topButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0px;
+    font-size: 0.9em;
+}
+
+
+#lobbyTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #2a2a2a;
+    color: #ffb84d;
+    font-family: Arial, sans-serif;
+}
+
+
+#lobbyTable th,
+#lobbyTable td {
+    border: 1px solid #4d2f1f;
+    padding: 8px 12px;
+    text-align: left;
+    max-height: 40px;      /* ogranicza maksymalną wysokość */
+    overflow: hidden;      /* ukrywa nadmiar tekstu */
+    text-overflow: ellipsis; /* dodaje "..." jeśli tekst się nie mieści */
+    white-space: nowrap;   /* tekst w jednej linii */
+}
+#lobbyTable th {
+    background-color: #3b3b3b;
+    color: #ffb84d;
+    font-weight: bold;
+}
+
+#lobbyTable tr:hover {
+    background-color: #404040;
+}
+
+
+#lobbyTable button {
+    width: 80%;
+    padding: 5px 10px;
+    background-color: #4d2f1f;
+    color: #ffb84d;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#lobbyTable button:hover {
+    background-color: #6e4b30;
+}

@@ -16,8 +16,12 @@ class Lobby:
             "cell8": None,
             "cell9": None
         }
-        self.state_of_game = {"who_wins": None}
 
+        self.name = None
+        self.password = None
+        self.creator_id = None
+
+        self.state_of_game = {"who_wins": None}
         self.current_turn = self.players[0].player_id if self.players else None
 
     def add_player(self, player):
