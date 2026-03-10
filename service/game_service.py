@@ -23,12 +23,20 @@ class GameService:
         self.game.lobbies[lobby_id] = lobby
         return lobby
     
-    def join_lobby(self, lobby_id, player_id):
+    def join_lobby(self, lobby_id, player_id, typed_password):
         lobby = self.get_lobbies().get(lobby_id)
+        if len(lobby.players) >= 2:
+            raise Exception("Lobby is full")
+        
+        if lobby.password:
+            if lobby.password != typed_password:
+                    raise Exception("Wrong password")
+
         if lobby:
             player = self.game.get_player(player_id)
             if player:
                 player.lobby_id = lobby_id
+                print(f"player: {player}, lobby_id: {player.lobby_id}", flush=True)
                 if len(lobby.players) == 0:
                     player.symbol = random.choice(["cross", "circle"])
                 else:
@@ -52,10 +60,18 @@ class GameService:
                 },
                 "lobby_id": lobby.lobby_id
             }
-
         return {"success": False, "error": "Lobby not found"}
 
     
+    def remove_player(self, player):
+        lobby = self.game.lobbies.get(player.lobby_id)
+        if player in lobby.players:
+            lobby.players.remove(player)
+            if len(lobby.players) == 0:
+                self.game.lobbies.pop(lobby.lobby_id)
+                return
+            return lobby.lobby_id
+
     def get_player(self, player):
         for lobby in self.game.lobbies.values():
             player = next((p for p in lobby.players if p.player_id == player), None)
@@ -63,18 +79,17 @@ class GameService:
                 return player
         return None
 
-    def handle_click_cell(self, player_id, cell_id):
-        lobby = next(
-            (lobby for lobby in self.game.lobbies.values()
-            if any(p.player_id == player_id for p in lobby.players)),
-            None
-        )
+    def handle_click_cell(self, player, cell_id):
+        player_id = player.player_id
+        lobby = self.game.lobbies.get(player.lobby_id)
 
         if not lobby:
             return {"success": False, "error": "Lobby not found"}
 
 
-        player = next(p for p in lobby.players if p.player_id == player_id)
+        player = next((p for p in lobby.players if p.player_id == player_id), None)
+        if not player:
+            return {"success": False, "error": "Player not found in lobby"}
 
         if lobby.current_turn != player_id:
             return {"success": False, "error": "Not your turn"}
@@ -102,13 +117,11 @@ class GameService:
 
         for combo in win_combinations:
             if all(lobby.board[cell] == player.symbol for cell in combo):
-                lobby.board["winner"] = player.symbol
-                lobby = self.game.lobbies.get(player.lobby_id)
                 lobby.state_of_game["who_wins"] = player.symbol
-                lobby.reset_turn()
-                self.clean_board(lobby.lobby_id)
+                lobby.current_turn = None
                 for p in lobby.players:
                     p.status = "waiting"
+                break
 
         print(f"board: {lobby.board}", flush=True)
 
@@ -118,8 +131,15 @@ class GameService:
             "lobby_id": lobby.lobby_id
         }
     
-    def clean_board(self, lobby_id):
-        lobby = self.game.lobbies.get(lobby_id)
+    def start_new_game(self, player):
+        lobby = self.game.lobbies.get(player.lobby_id)
+        self.clean_board(lobby)
+        lobby.current_turn = random.choice(lobby.players).player_id
+        lobby.state_of_game["who_wins"] = None
+        for p in lobby.players:
+            p.status = "waiting"
+
+    def clean_board(self, lobby):
         if lobby:
             lobby.board = {
             "cell1": None,
@@ -133,61 +153,3 @@ class GameService:
             "cell9": None
         }
             
-    # def join_lobby(self, player_name):
-    #         player = self.create_player(player_name) #tworzenie playera
-    #         lobby = self.append_to_exists_lobby(player) #dołączamy/próbujemy dołączyć do istniejącego lobby
-    #         return player, lobby
-
-    # def append_to_exists_lobby(self, player):
-    #         last_lobby = self.get_last_lobby() #pobieramy ostatnie lobby
-
-    #         if last_lobby is None or self.check_lobby_full(): #jeśli jest pełne bądź nie istnieje (pierwsze lobby) tworzymy je
-    #             return self.create_lobby(player)
-    #         else:
-    #             if len(last_lobby.players) > 0 and last_lobby.players[0].symbol == 'cross':
-    #                 player.symbol = 'circle'
-    #             else:
-    #                 player.symbol = 'cross'
-    #             last_lobby.add_player(player)
-    #             player.lobby_id = last_lobby.lobby_id
-    #             random_player = random.choice(last_lobby.players)
-    #             last_lobby.current_turn = random_player.player_id
-    #             return last_lobby
-
-    # def create_lobby(self, player):
-    #     lobby_id = str(uuid.uuid4())
-    #     player.lobby_id = lobby_id
-    #     lobby = Lobby(lobby_id)
-
-    #     player.symbol = 'circle'
-    #     lobby.add_player(player)
-
-    #     self.game.lobbies[lobby_id] = lobby
-
-    #     print(f"Created lobby {lobby_id} and added player {player.player_id}", flush=True)
-
-    #     return lobby
-
-    
-
-    # def check_lobby_full(self):
-    #     last_lobby = self.get_last_lobby()
-    #     self.clean_board(last_lobby.lobby_id)
-    #     if last_lobby is None:
-    #         return False
-    #     return len(last_lobby.players) >= 2
-
-    # def get_last_lobby(self):
-    #     if not self.game.lobbies:
-    #         return None
-    #     last_key = max(self.game.lobbies.keys())
-    #     return self.game.lobbies[last_key]
-    
-
-    # def remove_player(self, player_id):
-    #     for lobby in self.game.lobbies.values():
-    #         player = next((p for p in lobby.players if p.player_id == player_id), None)
-    #         if player:
-    #             lobby.players.remove(player)
-    #             return lobby.lobby_id
-    #     return None

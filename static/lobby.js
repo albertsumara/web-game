@@ -114,6 +114,28 @@ function showLobbyChooser(lobbies = []) {
     table.appendChild(thead);
     const tbody = document.createElement("tbody");
     table.appendChild(tbody);
+
+    const passwordContainer = document.createElement("div");
+    passwordContainer.style.marginTop = "15px";
+    passwordContainer.style.display = "flex";
+    passwordContainer.style.flexDirection = "column";
+
+    const passwordLabel = document.createElement("label");
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "password";
+    passwordInput.placeholder = "Enter lobby password";
+    passwordInput.style.padding = "8px";
+    passwordInput.style.borderRadius = "5px";
+    passwordInput.style.border = "1px solid #4d2f1f";
+    passwordInput.style.background = "#2a2a2a";
+    passwordInput.style.color = "white";
+    passwordInput.id = "lobbyPassword";
+
+    passwordContainer.appendChild(passwordLabel);
+    passwordContainer.appendChild(passwordInput);
+    wrapperDiv.appendChild(passwordContainer);
+ 
+
     fetchLobbies();
 }
 
@@ -139,11 +161,19 @@ function fetchLobbies() {
                 const joinCell = document.createElement("td");
                 const joinBtn = document.createElement("button");
                 joinBtn.textContent = "Join";
+                if (lobby.players >= (lobby.max_players || 2)) {
+                    joinBtn.disabled = true;
+                }
                 joinBtn.onclick = () => {
-                    socket.emit("join_lobby", { lobby_id: lobby.id });
+                    const password = document.getElementById("lobbyPassword").value;
+                    socket.emit("join_lobby", {
+                         lobby_id: lobby.id,
+                         password: password
+                         });
                 };
                 socket.on("join_lobby_response", (data) => {
                     if (data.success) {
+                        lobbyId = lobby.id
                         showLobby();
                     } else {
                         alert("Nie udało się dołączyć: " + data.error);
@@ -209,7 +239,10 @@ function lobbyCreator() {
         .then(data => {
             if (data.success) {
                 lobbyId = data.lobby_id;
-                socket.emit("join_lobby", {lobby_id: lobbyId});
+                socket.emit("join_lobby", {
+                    lobby_id: lobbyId,
+                    password: password
+                });
                 showLobby();
 
             } else {
@@ -321,7 +354,7 @@ socket.on("lobby_update", (data) => {
 
 function startGame() {
     hideAllViews();
-    lobbyDiv.style.display = "block";
+    gameDiv.style.display = "block";
 
     for (let i = 1; i <= 9; i++) {
         const cell = document.createElement("div");

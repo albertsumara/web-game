@@ -22,7 +22,7 @@ class Lobby:
         self.creator_id = None
 
         self.state_of_game = {"who_wins": None}
-        self.current_turn = self.players[0].player_id if self.players else None
+        self.current_turn = None
 
     def add_player(self, player):
         self.players.append(player)
@@ -32,3 +32,4 @@ class Lobby:
     
     def reset_turn(self):
         self.current_turn = random.choice(self.players).player_id if self.players else None
+
