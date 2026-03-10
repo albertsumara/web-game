@@ -13,12 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 socket.on("connect", () => {
-    console.log("Połączono z serwerem SocketIO");
-
     socket.emit("join", { name: nickname }, (response) => {
         lobbyId = response.room;
-        console.log("Dołączono do lobby:", lobbyId);
-
     });
 });
 
@@ -38,6 +34,7 @@ function setReady() {
     if (!lobbyId) {
         return;
     }
+    console.log("test");
     socket.emit("change_status", {
     });
 }
@@ -115,38 +112,50 @@ function showLobbyChooser(lobbies = []) {
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
-
     const tbody = document.createElement("tbody");
-    lobbies.forEach(lobby => {
-        const row = document.createElement("tr");
-
-        const idCell = document.createElement("td");
-        idCell.textContent = lobby.id;
-        row.appendChild(idCell);
-
-        const nameCell = document.createElement("td");
-        nameCell.textContent = lobby.name;
-        row.appendChild(nameCell);
-
-        const playersCell = document.createElement("td");
-        playersCell.textContent = `${lobby.players}/2`;
-        row.appendChild(playersCell);
-
-        const statusCell = document.createElement("td");
-        statusCell.textContent = lobby.players < 2 ? "Waiting" : "Full";
-        row.appendChild(statusCell);
-
-        const actionCell = document.createElement("td");
-        const joinBtn = document.createElement("button");
-        joinBtn.textContent = "Join";
-        joinBtn.onclick = () => socket.emit("join_lobby", { lobby_id: lobby.id });
-        actionCell.appendChild(joinBtn);
-        row.appendChild(actionCell);
-
-        tbody.appendChild(row);
-    });
     table.appendChild(tbody);
     fetchLobbies();
+}
+
+function fetchLobbies() {
+    fetch("/get_lobbies")
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector("#lobbyTable tbody");
+            tbody.innerHTML = "";
+
+
+            data.lobbies.forEach(lobby => {
+                const row = document.createElement("tr");
+                const idCell = document.createElement("td");
+                idCell.textContent = data.lobbies.indexOf(lobby) + 1;
+                row.appendChild(idCell);
+                const nameCell = document.createElement("td");
+                nameCell.textContent = lobby.name;
+                row.appendChild(nameCell);
+                const playersCell = document.createElement("td");
+                playersCell.textContent = `${lobby.players}/${lobby.max_players || 2}`;
+                row.appendChild(playersCell);
+                const joinCell = document.createElement("td");
+                const joinBtn = document.createElement("button");
+                joinBtn.textContent = "Join";
+                joinBtn.onclick = () => {
+                    socket.emit("join_lobby", { lobby_id: lobby.id });
+                };
+                socket.on("join_lobby_response", (data) => {
+                    if (data.success) {
+                        showLobby();
+                    } else {
+                        alert("Nie udało się dołączyć: " + data.error);
+                    }
+                });
+                joinCell.appendChild(joinBtn);
+                row.appendChild(joinCell);
+
+                tbody.appendChild(row);
+            });
+        })
+        .catch(err => console.error("Error fetching lobbies:", err));
 }
 
 function lobbyCreator() {
@@ -199,7 +208,10 @@ function lobbyCreator() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("Lobby created:", data.lobby_id);
+                lobbyId = data.lobby_id;
+                socket.emit("join_lobby", {lobby_id: lobbyId});
+                showLobby();
+
             } else {
                 alert("Error: " + data.error);
             }
@@ -279,12 +291,10 @@ function showLobby(){
 
 socket.on("lobby_update", (data) => {
     const table = document.querySelector("#playersList table");
-    if (!table) return; // jeśli UI jeszcze nie zbudowane
+    if (!table) return;
 
-    // Czyścimy tabelę
     table.innerHTML = "";
 
-    // Tworzymy nagłówek
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
     ["Nickname", "Symbol", "Status"].forEach(text => {
@@ -381,68 +391,4 @@ function hideAllViews() {
     if (gameDiv) gameDiv.style.display = "none";
 }
 
-function fetchLobbies() {
-    fetch("/get_lobbies")
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.querySelector("#lobbyTable tbody");
-            tbody.innerHTML = ""; // czyścimy poprzednie lobby
-
-
-            data.lobbies.forEach(lobby => {
-                const row = document.createElement("tr");
-
-
-                
-                const idCell = document.createElement("td");
-                idCell.textContent = data.lobbies.indexOf(lobby) + 1;
-                row.appendChild(idCell);
-
-
-                const nameCell = document.createElement("td");
-                nameCell.textContent = lobby.name;
-                row.appendChild(nameCell);
-
-
-                const playersCell = document.createElement("td");
-                playersCell.textContent = `${lobby.players}/${lobby.max_players || 2}`;
-                row.appendChild(playersCell);
-
-                // Join button
-                const joinCell = document.createElement("td");
-                const joinBtn = document.createElement("button");
-                joinBtn.textContent = "Join";
-                joinBtn.onclick = () => {
-                    if (lobby.has_password) {
-                        const pw = prompt("Enter lobby password:");
-                        // tutaj możesz zrobić POST z password
-                        joinLobby(lobby.id, pw);
-                    } else {
-                        joinLobby(lobby.id);
-                    }
-                };
-                joinCell.appendChild(joinBtn);
-                row.appendChild(joinCell);
-
-                tbody.appendChild(row);
-            });
-        })
-        .catch(err => console.error("Error fetching lobbies:", err));
-}
-
-function joinLobby(lobbyId, password = null) {
-    fetch("/join_lobby", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lobby_id: lobbyId, password: password })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert("Joined lobby!");
-        } else {
-            alert("Error: " + data.error);
-        }
-    });
-}
 

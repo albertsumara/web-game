@@ -10,7 +10,9 @@ class GameService:
         self.game = game
 
     def create_player(self, name):
-        return Player(name)
+        player = Player(name)
+        self.game.players[player.player_id] = player
+        return player
 
     def create_lobby(self, lobby_name, creator_id=None, password=None):
         lobby_id = str(uuid.uuid4())
@@ -18,32 +20,45 @@ class GameService:
         lobby.name = lobby_name
         lobby.password = password
         lobby.creator_id = creator_id
-        print(f"Created lobby {lobby_id} with name {lobby_name} by player {creator_id}", flush=True)
         self.game.lobbies[lobby_id] = lobby
         return lobby
     
-    def get_lobbies(self):
-        return list(self.game.lobbies.values())
-    
-    def toggle_player_status(self, player_id: str):
-        for lobby in self.game.lobbies.values():
-            player = next((p for p in lobby.players if p.player_id == player_id), None)
+    def join_lobby(self, lobby_id, player_id):
+        lobby = self.get_lobbies().get(lobby_id)
+        if lobby:
+            player = self.game.get_player(player_id)
             if player:
-                player.status = "ready" if player.status == "waiting" else "waiting"
-                
-                return {
-                    "success": True,
-                    "lobby": {
-                        "players": [p.to_dict() for p in lobby.players]
-                    },
-                    "lobby_id": lobby.lobby_id
-                }
-        return {"success": False, "error": "Player not found"}
+                player.lobby_id = lobby_id
+                if len(lobby.players) == 0:
+                    player.symbol = random.choice(["cross", "circle"])
+                else:
+                    first_player_symbol = lobby.players[0].symbol
+                    player.symbol = "circle" if first_player_symbol == "cross" else "cross"
+                lobby.add_player(player)
+
+
+    def get_lobbies(self):
+        return self.game.lobbies
+    
+    def toggle_player_status(self, player):
+        player.status = "ready" if player.status == "waiting" else "waiting"
+
+        lobby = self.game.lobbies.get(player.lobby_id)
+        if lobby:
+            return {
+                "success": True,
+                "lobby": {
+                    "players": [p.to_dict() for p in lobby.players]
+                },
+                "lobby_id": lobby.lobby_id
+            }
+
+        return {"success": False, "error": "Lobby not found"}
 
     
-    def get_player(self, player_id):
+    def get_player(self, player):
         for lobby in self.game.lobbies.values():
-            player = next((p for p in lobby.players if p.player_id == player_id), None)
+            player = next((p for p in lobby.players if p.player_id == player), None)
             if player:
                 return player
         return None
