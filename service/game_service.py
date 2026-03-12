@@ -115,13 +115,22 @@ class GameService:
             ["cell3", "cell5", "cell7"]
         ]
 
+        winner_found = False
+
         for combo in win_combinations:
             if all(lobby.board[cell] == player.symbol for cell in combo):
                 lobby.state_of_game["who_wins"] = player.symbol
                 lobby.current_turn = None
                 for p in lobby.players:
                     p.status = "waiting"
+                winner_found = True
                 break
+
+        if not winner_found and all(cell is not None for cell in lobby.board.values()):
+            lobby.state_of_game["who_wins"] = "draw"
+            lobby.current_turn = None
+            for p in lobby.players:
+                p.status = "waiting"
 
         print(f"board: {lobby.board}", flush=True)
 

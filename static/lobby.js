@@ -26,6 +26,18 @@ socket.on("show_lobby", () => {
     showLobby();
 });
 
+socket.on("game_over", (data) => {
+    const winner = data.winner;
+    console.log("Otrzymano sygnał game_over, zwycięzca:", winner);
+    if (winner == "draw"){
+        alert(`Game Over! ${winner}`);
+    }
+    else{
+        alert(`Game Over! Winner: ${winner}`);
+    }
+    showLobby();
+});
+
 socket.onAny((event, data) => {
     console.log("Received event:", event, data);
 });
@@ -377,13 +389,6 @@ function startGame() {
 socket.on("assign_symbol", (data) => {
     playerSymbol = data.player_symbol;
     console.log("Otrzymano symbol gracza:", playerSymbol);
-});
-
-socket.on("game_over", (data) => {
-    const winner = data.winner;
-    console.log("Otrzymano sygnał game_over, zwycięzca:", winner);
-    alert(`Game Over! Winner: ${winner}`);
-    showLobby();
 });
 
 socket.on("game_update", (board) => {

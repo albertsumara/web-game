@@ -111,14 +111,19 @@ def register_lobby_socket(app, socketio, game_service):
             emit("error", {"message": result["error"]})
             return
         player = game_service.get_player(socket_to_player.get(request.sid).player_id)
-        if game_service.game.lobbies.get(player.lobby_id).state_of_game["who_wins"] is not None:
-            emit("game_over", {"winner": game_service.game.lobbies.get(player.lobby_id).state_of_game["who_wins"]}, room=player.lobby_id)
+
+        game_result = game_service.game.lobbies.get(player.lobby_id).state_of_game["who_wins"]
+
+        if game_result:
+            emit("game_over", {"winner": game_result}, room=player.lobby_id)
             emit(
             "lobby_update",
             {"players": [{"name": p.name, "symbol": p.symbol, "status": p.status} 
                          for p in game_service.game.lobbies.get(player.lobby_id).players]},
             room=player.lobby_id
             )
+
+        
 
         socketio.emit(
             "game_update",
